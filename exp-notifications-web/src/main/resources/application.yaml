@@ -1,0 +1,76 @@
+spring:
+  application:
+    name: exp-notifications
+    version: 1.0.0
+    description: Experience layer API for notification preferences and notification history
+    team:
+      name: Firefly Software Solutions Inc
+      email: dev@getfirefly.io
+  threads:
+    virtual:
+      enabled: true
+
+api-configuration:
+  domain-platform:
+    common-notifications:
+      base-path: ${COMMON_NOTIFICATIONS_URL:http://localhost:8095}
+      timeout: 5s
+
+springdoc:
+  packages-to-scan: com.firefly.experience.notifications.web.controllers
+  paths-to-match: /api/**
+  swagger-ui:
+    path: /swagger-ui.html
+    tagsSorter: alpha
+    operationsSorter: method
+    docExpansion: none
+    filter: true
+
+server:
+  port: ${SERVER_PORT:8104}
+  address: ${SERVER_ADDRESS:localhost}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.firefly.experience.notifications: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+logging:
+  level:
+    com.firefly: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: pro
+logging:
+  level:
+    com.firefly: INFO
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
