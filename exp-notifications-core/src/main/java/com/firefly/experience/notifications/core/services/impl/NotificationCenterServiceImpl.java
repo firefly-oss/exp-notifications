@@ -49,7 +49,7 @@ public class NotificationCenterServiceImpl implements NotificationCenterService 
     @Override
     public Flux<NotificationDTO> listNotifications(UUID partyId) {
         log.debug("Listing notifications for partyId={}", partyId);
-        return notificationsApi.getNotificationsForParty(partyId, null, null)
+        return notificationsApi.getNotificationsForParty(partyId, null, null, UUID.randomUUID().toString())
                 .map(this::mapToNotificationDTO);
     }
 
@@ -57,7 +57,7 @@ public class NotificationCenterServiceImpl implements NotificationCenterService 
     @Override
     public Mono<NotificationDetailDTO> getNotification(UUID notificationId) {
         log.debug("Getting notification notificationId={}", notificationId);
-        return notificationsApi.getNotificationDetail(notificationId)
+        return notificationsApi.getNotificationDetail(notificationId, UUID.randomUUID().toString())
                 .map(this::mapToNotificationDetailDTO);
     }
 
@@ -65,28 +65,28 @@ public class NotificationCenterServiceImpl implements NotificationCenterService 
     @Override
     public Mono<Void> markAsRead(UUID partyId, UUID notificationId) {
         log.debug("Marking as read notificationId={} partyId={}", notificationId, partyId);
-        return notificationsApi.markAsRead(notificationId, partyId).then();
+        return notificationsApi.markAsRead(notificationId, partyId, UUID.randomUUID().toString()).then();
     }
 
     /** {@inheritDoc} */
     @Override
     public Mono<Void> markAllAsRead(UUID partyId) {
         log.debug("Marking all as read partyId={}", partyId);
-        return notificationsApi.markAllAsRead(partyId).then();
+        return notificationsApi.markAllAsRead(partyId, UUID.randomUUID().toString()).then();
     }
 
     /** {@inheritDoc} */
     @Override
     public Mono<Void> deleteNotification(UUID partyId, UUID notificationId) {
         log.debug("Deleting notificationId={} partyId={}", notificationId, partyId);
-        return notificationsApi.deleteNotification(notificationId, partyId).then();
+        return notificationsApi.deleteNotification(notificationId, partyId, UUID.randomUUID().toString()).then();
     }
 
     /** {@inheritDoc} */
     @Override
     public Mono<UnreadCountDTO> getUnreadCount(UUID partyId) {
         log.debug("Getting unread count for partyId={}", partyId);
-        return notificationsApi.getNotificationsForParty(partyId, null, null)
+        return notificationsApi.getNotificationsForParty(partyId, null, null, UUID.randomUUID().toString())
                 .filter(n -> Boolean.FALSE.equals(n.getRead()))
                 .count()
                 .map(UnreadCountDTO::new);
@@ -96,7 +96,7 @@ public class NotificationCenterServiceImpl implements NotificationCenterService 
     @Override
     public Mono<NotificationPreferencesDTO> getPreferences(UUID partyId) {
         log.debug("Getting preferences for partyId={}", partyId);
-        return notificationPreferencesApi.getPreferences(partyId)
+        return notificationPreferencesApi.getPreferences(partyId, UUID.randomUUID().toString())
                 .map(this::mapToPreferencesDTO);
     }
 
@@ -105,8 +105,8 @@ public class NotificationCenterServiceImpl implements NotificationCenterService 
     public Mono<NotificationPreferencesDTO> updatePreferences(UUID partyId, UpdatePreferencesCommand command) {
         log.debug("Updating preferences for partyId={}", partyId);
         Map<String, Boolean> prefsMap = buildPreferencesMap(command);
-        return notificationPreferencesApi.updatePreferences(partyId, prefsMap)
-                .then(notificationPreferencesApi.getPreferences(partyId))
+        return notificationPreferencesApi.updatePreferences(partyId, prefsMap, UUID.randomUUID().toString())
+                .then(notificationPreferencesApi.getPreferences(partyId, UUID.randomUUID().toString()))
                 .map(this::mapToPreferencesDTO);
     }
 

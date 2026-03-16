@@ -53,7 +53,7 @@ class NotificationCenterServiceImplTest {
     @Test
     void listNotifications_mapsSubjectAndBodyCorrectly() {
         var sdkNotification = buildSdkNotification(NOTIFICATION_ID, "Welcome!", "Your account is ready", "EMAIL", false);
-        when(notificationsApi.getNotificationsForParty(eq(PARTY_ID), isNull(), isNull()))
+        when(notificationsApi.getNotificationsForParty(eq(PARTY_ID), isNull(), isNull(), any()))
                 .thenReturn(Flux.just(sdkNotification));
 
         StepVerifier.create(service.listNotifications(PARTY_ID))
@@ -69,7 +69,7 @@ class NotificationCenterServiceImplTest {
 
     @Test
     void listNotifications_returnsEmptyWhenNoNotifications() {
-        when(notificationsApi.getNotificationsForParty(eq(PARTY_ID), isNull(), isNull()))
+        when(notificationsApi.getNotificationsForParty(eq(PARTY_ID), isNull(), isNull(), any()))
                 .thenReturn(Flux.empty());
 
         StepVerifier.create(service.listNotifications(PARTY_ID))
@@ -81,7 +81,7 @@ class NotificationCenterServiceImplTest {
     @Test
     void getNotification_returnsDetailDTO() {
         var sdkNotification = buildSdkNotification(NOTIFICATION_ID, "Transfer alert", "You sent EUR 100", "PUSH", true);
-        when(notificationsApi.getNotificationDetail(NOTIFICATION_ID))
+        when(notificationsApi.getNotificationDetail(eq(NOTIFICATION_ID), any()))
                 .thenReturn(Mono.just(sdkNotification));
 
         StepVerifier.create(service.getNotification(NOTIFICATION_ID))
@@ -101,39 +101,39 @@ class NotificationCenterServiceImplTest {
 
     @Test
     void markAsRead_delegatesToSdk() {
-        when(notificationsApi.markAsRead(NOTIFICATION_ID, PARTY_ID))
+        when(notificationsApi.markAsRead(eq(NOTIFICATION_ID), eq(PARTY_ID), any()))
                 .thenReturn(Mono.just(new Object()));
 
         StepVerifier.create(service.markAsRead(PARTY_ID, NOTIFICATION_ID))
                 .verifyComplete();
 
-        verify(notificationsApi).markAsRead(NOTIFICATION_ID, PARTY_ID);
+        verify(notificationsApi).markAsRead(eq(NOTIFICATION_ID), eq(PARTY_ID), any());
     }
 
     // --- markAllAsRead ---
 
     @Test
     void markAllAsRead_delegatesToSdk() {
-        when(notificationsApi.markAllAsRead(PARTY_ID))
+        when(notificationsApi.markAllAsRead(eq(PARTY_ID), any()))
                 .thenReturn(Mono.just(new Object()));
 
         StepVerifier.create(service.markAllAsRead(PARTY_ID))
                 .verifyComplete();
 
-        verify(notificationsApi).markAllAsRead(PARTY_ID);
+        verify(notificationsApi).markAllAsRead(eq(PARTY_ID), any());
     }
 
     // --- deleteNotification ---
 
     @Test
     void deleteNotification_delegatesToSdk() {
-        when(notificationsApi.deleteNotification(NOTIFICATION_ID, PARTY_ID))
+        when(notificationsApi.deleteNotification(eq(NOTIFICATION_ID), eq(PARTY_ID), any()))
                 .thenReturn(Mono.just(new Object()));
 
         StepVerifier.create(service.deleteNotification(PARTY_ID, NOTIFICATION_ID))
                 .verifyComplete();
 
-        verify(notificationsApi).deleteNotification(NOTIFICATION_ID, PARTY_ID);
+        verify(notificationsApi).deleteNotification(eq(NOTIFICATION_ID), eq(PARTY_ID), any());
     }
 
     // --- getUnreadCount ---
@@ -148,7 +148,7 @@ class NotificationCenterServiceImplTest {
         var unread1 = buildSdkNotification(UUID.randomUUID(), "New1", "Not yet read", "SMS", false);
         var unread2 = buildSdkNotification(UUID.randomUUID(), "New2", "Not yet read either", "PUSH", false);
 
-        when(notificationsApi.getNotificationsForParty(eq(PARTY_ID), isNull(), isNull()))
+        when(notificationsApi.getNotificationsForParty(eq(PARTY_ID), isNull(), isNull(), any()))
                 .thenReturn(Flux.just(read, unread1, unread2));
 
         StepVerifier.create(service.getUnreadCount(PARTY_ID))
@@ -161,7 +161,7 @@ class NotificationCenterServiceImplTest {
         var read1 = buildSdkNotification(UUID.randomUUID(), "Read1", "Body", "EMAIL", true);
         var read2 = buildSdkNotification(UUID.randomUUID(), "Read2", "Body", "SMS", true);
 
-        when(notificationsApi.getNotificationsForParty(eq(PARTY_ID), isNull(), isNull()))
+        when(notificationsApi.getNotificationsForParty(eq(PARTY_ID), isNull(), isNull(), any()))
                 .thenReturn(Flux.just(read1, read2));
 
         StepVerifier.create(service.getUnreadCount(PARTY_ID))
@@ -176,7 +176,7 @@ class NotificationCenterServiceImplTest {
         var sdkPrefs = new NotificationPreferencesDTO()
                 .partyId(PARTY_ID)
                 .preferences(Map.of(PREF_EMAIL, true, PREF_SMS, false, PREF_PUSH, true, PREF_IN_APP, true, PREF_MARKETING, true));
-        when(notificationPreferencesApi.getPreferences(PARTY_ID))
+        when(notificationPreferencesApi.getPreferences(eq(PARTY_ID), any()))
                 .thenReturn(Mono.just(sdkPrefs));
 
         StepVerifier.create(service.getPreferences(PARTY_ID))
@@ -193,7 +193,7 @@ class NotificationCenterServiceImplTest {
     @Test
     void getPreferences_usesDefaults_whenPreferencesMapIsNull() {
         var sdkPrefs = new NotificationPreferencesDTO().partyId(PARTY_ID).preferences(null);
-        when(notificationPreferencesApi.getPreferences(PARTY_ID))
+        when(notificationPreferencesApi.getPreferences(eq(PARTY_ID), any()))
                 .thenReturn(Mono.just(sdkPrefs));
 
         StepVerifier.create(service.getPreferences(PARTY_ID))
@@ -220,9 +220,9 @@ class NotificationCenterServiceImplTest {
                 .partyId(PARTY_ID)
                 .preferences(Map.of(PREF_SMS, false, PREF_MARKETING, true));
 
-        when(notificationPreferencesApi.updatePreferences(eq(PARTY_ID), any()))
+        when(notificationPreferencesApi.updatePreferences(eq(PARTY_ID), any(), any()))
                 .thenReturn(Mono.just(new Object()));
-        when(notificationPreferencesApi.getPreferences(PARTY_ID))
+        when(notificationPreferencesApi.getPreferences(eq(PARTY_ID), any()))
                 .thenReturn(Mono.just(sdkPrefs));
 
         StepVerifier.create(service.updatePreferences(PARTY_ID, command))
@@ -234,7 +234,8 @@ class NotificationCenterServiceImplTest {
 
         verify(notificationPreferencesApi).updatePreferences(
                 eq(PARTY_ID),
-                eq(Map.of(PREF_SMS, false, PREF_MARKETING, true)));
+                eq(Map.of(PREF_SMS, false, PREF_MARKETING, true)),
+                any());
     }
 
     // --- helpers ---
