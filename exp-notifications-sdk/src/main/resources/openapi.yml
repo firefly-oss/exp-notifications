@@ -1,0 +1,270 @@
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:18080
+  description: Generated server url
+tags:
+- name: Notifications
+  description: Notification center and preferences
+paths:
+  /api/v1/experience/notifications/preferences:
+    get:
+      tags:
+      - Notifications
+      summary: Get notification preferences
+      operationId: getPreferences
+      parameters:
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NotificationPreferencesDTO"
+    put:
+      tags:
+      - Notifications
+      summary: Update notification preferences
+      operationId: updatePreferences
+      parameters:
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePreferencesCommand"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NotificationPreferencesDTO"
+  /api/v1/experience/notifications/read-all:
+    post:
+      tags:
+      - Notifications
+      summary: Mark all notifications as read
+      operationId: markAllAsRead
+      parameters:
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+  /api/v1/experience/notifications/{id}/read:
+    patch:
+      tags:
+      - Notifications
+      summary: Mark notification as read
+      operationId: markAsRead
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+  /api/v1/experience/notifications:
+    get:
+      tags:
+      - Notifications
+      summary: List notifications
+      description: Returns the notification list for the authenticated party
+      operationId: listNotifications
+      parameters:
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NotificationDTO"
+  /api/v1/experience/notifications/{id}:
+    get:
+      tags:
+      - Notifications
+      summary: Get notification detail
+      description: Returns full detail for a single notification
+      operationId: getNotification
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NotificationDetailDTO"
+    delete:
+      tags:
+      - Notifications
+      summary: Delete a notification
+      operationId: deleteNotification
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+  /api/v1/experience/notifications/unread-count:
+    get:
+      tags:
+      - Notifications
+      summary: Get unread notification count
+      operationId: getUnreadCount
+      parameters:
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UnreadCountDTO"
+components:
+  schemas:
+    UpdatePreferencesCommand:
+      type: object
+      properties:
+        email:
+          type: boolean
+        sms:
+          type: boolean
+        push:
+          type: boolean
+        inApp:
+          type: boolean
+        marketingConsent:
+          type: boolean
+    NotificationPreferencesDTO:
+      type: object
+      properties:
+        email:
+          type: boolean
+        sms:
+          type: boolean
+        push:
+          type: boolean
+        inApp:
+          type: boolean
+        marketingConsent:
+          type: boolean
+    NotificationDTO:
+      type: object
+      properties:
+        notificationId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        message:
+          type: string
+        channel:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        read:
+          type: boolean
+    NotificationDetailDTO:
+      type: object
+      properties:
+        notificationId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        message:
+          type: string
+        channel:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        relatedEntityId:
+          type: string
+          format: uuid
+        relatedEntityType:
+          type: string
+        read:
+          type: boolean
+    UnreadCountDTO:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int64
