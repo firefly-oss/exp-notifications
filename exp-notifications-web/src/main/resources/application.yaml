@@ -13,7 +13,7 @@ spring:
 api-configuration:
   domain-platform:
     common-notifications:
-      base-path: ${COMMON_NOTIFICATIONS_URL:http://localhost:8095}
+      base-path: ${ENDPOINT_DOMAIN_COMMON_NOTIFICATIONS:http://localhost:8095}
       timeout: 5s
 
 springdoc:
