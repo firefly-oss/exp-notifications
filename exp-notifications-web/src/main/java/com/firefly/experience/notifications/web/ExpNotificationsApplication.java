@@ -36,7 +36,7 @@ import org.springframework.web.reactive.config.EnableWebFlux;
         ),
         servers = {
                 @Server(
-                        url = "http://core.getfirefly.io/exp-notifications",
+                        url = "https://openplatform.fireflysoftware.io/exp-notifications",
                         description = "Development Environment"
                 ),
                 @Server(
