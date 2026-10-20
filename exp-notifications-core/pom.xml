@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>exp-notifications-core</artifactId>
+    <name>exp-notifications-core</name>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
