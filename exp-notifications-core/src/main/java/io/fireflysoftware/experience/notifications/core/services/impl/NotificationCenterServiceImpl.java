@@ -17,12 +17,9 @@
 
 package io.fireflysoftware.experience.notifications.core.services.impl;
 
-import io.fireflysoftware.domain.common.notifications.sdk.api.NotificationPreferencesApi;
 import io.fireflysoftware.domain.common.notifications.sdk.api.NotificationsApi;
-import io.fireflysoftware.experience.notifications.core.commands.UpdatePreferencesCommand;
 import io.fireflysoftware.experience.notifications.core.queries.NotificationDTO;
 import io.fireflysoftware.experience.notifications.core.queries.NotificationDetailDTO;
-import io.fireflysoftware.experience.notifications.core.queries.NotificationPreferencesDTO;
 import io.fireflysoftware.experience.notifications.core.queries.UnreadCountDTO;
 import io.fireflysoftware.experience.notifications.core.services.NotificationCenterService;
 import lombok.RequiredArgsConstructor;
@@ -31,36 +28,19 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 /**
  * Default implementation of {@link NotificationCenterService} that delegates
- * to the domain-common-notifications SDK APIs.
+ * to the domain-common-notifications SDK.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationCenterServiceImpl implements NotificationCenterService {
 
-    /** Preference channel key for email notifications. */
-    public static final String PREF_EMAIL = "EMAIL";
-
-    /** Preference channel key for SMS notifications. */
-    public static final String PREF_SMS = "SMS";
-
-    /** Preference channel key for push notifications. */
-    public static final String PREF_PUSH = "PUSH";
-
-    /** Preference channel key for in-app notifications. */
-    public static final String PREF_IN_APP = "IN_APP";
-
-    /** Preference channel key for marketing communications. */
-    public static final String PREF_MARKETING = "MARKETING";
-
     private final NotificationsApi notificationsApi;
-    private final NotificationPreferencesApi notificationPreferencesApi;
 
     /** {@inheritDoc} */
     @Override
@@ -109,26 +89,6 @@ public class NotificationCenterServiceImpl implements NotificationCenterService 
                 .map(UnreadCountDTO::new);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public Mono<NotificationPreferencesDTO> getPreferences(UUID partyId) {
-        log.debug("Getting preferences for partyId={}", partyId);
-        return notificationPreferencesApi.getPreferences(partyId, UUID.randomUUID().toString())
-                .map(this::mapToPreferencesDTO);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public Mono<NotificationPreferencesDTO> updatePreferences(UUID partyId, UpdatePreferencesCommand command) {
-        log.debug("Updating preferences for partyId={}", partyId);
-        Map<String, Boolean> prefsMap = buildPreferencesMap(command);
-        return notificationPreferencesApi.updatePreferences(partyId, prefsMap, UUID.randomUUID().toString())
-                .then(notificationPreferencesApi.getPreferences(partyId, UUID.randomUUID().toString()))
-                .map(this::mapToPreferencesDTO);
-    }
-
-    // --- Mapping helpers ---
-
     private NotificationDTO mapToNotificationDTO(io.fireflysoftware.domain.common.notifications.sdk.model.NotificationDTO sdk) {
         return NotificationDTO.builder()
                 .notificationId(sdk.getNotificationId())
@@ -152,27 +112,5 @@ public class NotificationCenterServiceImpl implements NotificationCenterService 
                 .relatedEntityId(null)
                 .relatedEntityType(null)
                 .build();
-    }
-
-    private NotificationPreferencesDTO mapToPreferencesDTO(
-            io.fireflysoftware.domain.common.notifications.sdk.model.NotificationPreferencesDTO sdk) {
-        Map<String, Boolean> prefs = sdk.getPreferences() != null ? sdk.getPreferences() : Map.of();
-        return NotificationPreferencesDTO.builder()
-                .email(prefs.getOrDefault(PREF_EMAIL, true))
-                .sms(prefs.getOrDefault(PREF_SMS, true))
-                .push(prefs.getOrDefault(PREF_PUSH, true))
-                .inApp(prefs.getOrDefault(PREF_IN_APP, true))
-                .marketingConsent(prefs.getOrDefault(PREF_MARKETING, false))
-                .build();
-    }
-
-    private Map<String, Boolean> buildPreferencesMap(UpdatePreferencesCommand command) {
-        Map<String, Boolean> map = new HashMap<>();
-        if (command.getEmail() != null) map.put(PREF_EMAIL, command.getEmail());
-        if (command.getSms() != null) map.put(PREF_SMS, command.getSms());
-        if (command.getPush() != null) map.put(PREF_PUSH, command.getPush());
-        if (command.getInApp() != null) map.put(PREF_IN_APP, command.getInApp());
-        if (command.getMarketingConsent() != null) map.put(PREF_MARKETING, command.getMarketingConsent());
-        return map;
     }
 }

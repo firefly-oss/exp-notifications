@@ -13,7 +13,7 @@ Developed by the Firefly Software Foundation. [dev@fireflysoftware.io](mailto:de
 
 [Website](https://fireflysoftware.io/) · [OpenPlatform](https://fireflysoftware.io/openplatform/) · [Module catalogue](https://fireflysoftware.io/openplatform/modules/)
 
-> Backend-for-Frontend service for the in-app notification centre and notification preferences
+> Backend-for-Frontend service for the in-app notification centre
 
 ## Table of Contents
 - [Overview](#overview)
@@ -28,11 +28,9 @@ Developed by the Firefly Software Foundation. [dev@fireflysoftware.io](mailto:de
 
 ## Overview
 
-`exp-notifications` is the experience-layer service that powers the in-app notification centre for authenticated users. It provides endpoints for listing and reading notifications, marking them as read (individually or all at once), deleting notifications, checking the unread count badge, and managing per-channel notification preferences.
+`exp-notifications` is the experience-layer service that powers the in-app notification centre. It lists and reads notifications the domain already sent, marks them read, deletes them, and returns the unread count. The caller supplies the party id on every operation that needs it.
 
-The service is a **simple stateless composition layer**: every request delegates to the `domain-common-notifications` service via its SDK, maps the result to experience-layer DTOs, and returns. There is no workflow, no Redis, and no persistent state within this service.
-
-> **Note**: In the current MVP implementation, the party identifier is resolved from a placeholder constant. Production deployments must extract the party ID from the authenticated JWT token via the security context.
+The service is a **simple stateless composition layer**: every request delegates to the `domain-common-notifications` service via its SDK, maps the result to experience-layer DTOs, and returns. There is no workflow, no Redis, and no persistent state within this service. The notification core has no preference resource, so this API does not expose preferences.
 
 ## Architecture
 
@@ -50,7 +48,7 @@ exp-notifications  (port 8104)
 | Module | Purpose |
 |--------|---------|
 | `exp-notifications-interfaces` | (Reserved for future shared contracts) |
-| `exp-notifications-core` | `NotificationCenterService` interface, `NotificationCenterServiceImpl`, command DTO (`UpdatePreferencesCommand`), query DTOs (`NotificationDTO`, `NotificationDetailDTO`, `NotificationPreferencesDTO`, `UnreadCountDTO`) |
+| `exp-notifications-core` | `NotificationCenterService` interface, `NotificationCenterServiceImpl`, query DTOs (`NotificationDTO`, `NotificationDetailDTO`, `UnreadCountDTO`) |
 | `exp-notifications-infra` | `NotificationsClientFactory`, `NotificationsProperties` |
 | `exp-notifications-web` | `NotificationCenterController`, Spring Boot application class, `application.yaml` |
 | `exp-notifications-sdk` | Auto-generated reactive SDK from the OpenAPI spec |
@@ -60,27 +58,24 @@ exp-notifications  (port 8104)
 | Vertical | Endpoints | Description |
 |----------|-----------|-------------|
 | Notifications | 5 | List, get detail, mark as read, mark all as read, delete |
-| Preferences | 2 | Get and update per-channel notification preferences |
 | Counts | 1 | Unread notification count for badge display |
 
 ## API Endpoints
 
 | Method | Path | Description | Response Code |
 |--------|------|-------------|---------------|
-| `GET` | `/api/v1/experience/notifications` | List all notifications for the authenticated party | `200 OK` |
+| `GET` | `/api/v1/experience/notifications?partyId=` | List notifications for the supplied party | `200 OK` |
 | `GET` | `/api/v1/experience/notifications/{id}` | Retrieve full details for a single notification | `200 OK` |
-| `PATCH` | `/api/v1/experience/notifications/{id}/read` | Mark a specific notification as read | `204 No Content` |
-| `POST` | `/api/v1/experience/notifications/read-all` | Mark all notifications as read | `204 No Content` |
-| `DELETE` | `/api/v1/experience/notifications/{id}` | Delete a specific notification | `204 No Content` |
-| `GET` | `/api/v1/experience/notifications/unread-count` | Get the count of unread notifications | `200 OK` |
-| `GET` | `/api/v1/experience/notifications/preferences` | Get notification channel preferences for the authenticated party | `200 OK` |
-| `PUT` | `/api/v1/experience/notifications/preferences` | Update notification channel preferences | `200 OK` |
+| `PATCH` | `/api/v1/experience/notifications/{id}/read?partyId=` | Mark a specific notification as read | `204 No Content` |
+| `POST` | `/api/v1/experience/notifications/read-all?partyId=` | Mark all notifications as read | `204 No Content` |
+| `DELETE` | `/api/v1/experience/notifications/{id}?partyId=` | Delete a specific notification | `204 No Content` |
+| `GET` | `/api/v1/experience/notifications/unread-count?partyId=` | Get the count of unread notifications | `200 OK` |
 
 ## Domain SDK Dependencies
 
 | SDK | ClientFactory | APIs Used | Purpose |
 |-----|--------------|-----------|---------|
-| `domain-common-notifications-sdk` | `NotificationsClientFactory` | `NotificationsApi` | Notification CRUD, read/unread state management, preference management |
+| `domain-common-notifications-sdk` | `NotificationsClientFactory` | `NotificationsApi` | Notification list, detail, read state, and delete |
 
 ## Configuration
 

@@ -2,7 +2,7 @@ spring:
   application:
     name: exp-notifications
     version: 1.0.0
-    description: Experience layer API for notification preferences and notification history
+    description: Experience layer API for a party's sent notification history
     team:
       name: Firefly Software Foundation
       email: dev@fireflysoftware.io

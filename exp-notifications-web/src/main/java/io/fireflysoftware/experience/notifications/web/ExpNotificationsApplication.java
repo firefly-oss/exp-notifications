@@ -29,9 +29,8 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 /**
  * Spring Boot application entry point for the Experience Notifications service.
  * <p>
- * Provides REST APIs for querying and managing user notification preferences and
- * notification history, composing the domain-common-notifications service for
- * frontend consumption.
+ * Provides REST APIs for a party's sent notification history, composing the
+ * domain-common-notifications service for frontend consumption.
  */
 @SpringBootApplication(
         scanBasePackages = {

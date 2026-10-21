@@ -17,10 +17,8 @@
 
 package io.fireflysoftware.experience.notifications.web.controllers;
 
-import io.fireflysoftware.experience.notifications.core.commands.UpdatePreferencesCommand;
 import io.fireflysoftware.experience.notifications.core.queries.NotificationDTO;
 import io.fireflysoftware.experience.notifications.core.queries.NotificationDetailDTO;
-import io.fireflysoftware.experience.notifications.core.queries.NotificationPreferencesDTO;
 import io.fireflysoftware.experience.notifications.core.queries.UnreadCountDTO;
 import io.fireflysoftware.experience.notifications.core.services.NotificationCenterService;
 import org.junit.jupiter.api.Test;
@@ -32,7 +30,6 @@ import org.springframework.boot.security.autoconfigure.web.reactive.ReactiveWebS
 import org.springframework.boot.security.autoconfigure.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -41,8 +38,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -67,8 +62,7 @@ class NotificationCenterControllerTest {
     @MockitoBean
     ErrorResponseNegotiator errorResponseNegotiator;
 
-    // Matches the placeholder in the controller
-    private static final UUID PARTY_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID PARTY_ID = UUID.randomUUID();
     private static final UUID NOTIFICATION_ID = UUID.randomUUID();
 
     // --- GET /api/v1/experience/notifications ---
@@ -79,7 +73,7 @@ class NotificationCenterControllerTest {
         when(notificationCenterService.listNotifications(PARTY_ID)).thenReturn(Flux.just(dto));
 
         webTestClient.get()
-                .uri("/api/v1/experience/notifications")
+                .uri(uri -> uri.path("/api/v1/experience/notifications").queryParam("partyId", PARTY_ID).build())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(NotificationDTO.class)
@@ -91,7 +85,7 @@ class NotificationCenterControllerTest {
         when(notificationCenterService.listNotifications(PARTY_ID)).thenReturn(Flux.empty());
 
         webTestClient.get()
-                .uri("/api/v1/experience/notifications")
+                .uri(uri -> uri.path("/api/v1/experience/notifications").queryParam("partyId", PARTY_ID).build())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(NotificationDTO.class)
@@ -119,7 +113,9 @@ class NotificationCenterControllerTest {
         when(notificationCenterService.markAsRead(PARTY_ID, NOTIFICATION_ID)).thenReturn(Mono.empty());
 
         webTestClient.patch()
-                .uri("/api/v1/experience/notifications/{id}/read", NOTIFICATION_ID)
+                .uri(uri -> uri.path("/api/v1/experience/notifications/{id}/read")
+                        .queryParam("partyId", PARTY_ID)
+                        .build(NOTIFICATION_ID))
                 .exchange()
                 .expectStatus().isNoContent();
 
@@ -133,7 +129,7 @@ class NotificationCenterControllerTest {
         when(notificationCenterService.markAllAsRead(PARTY_ID)).thenReturn(Mono.empty());
 
         webTestClient.post()
-                .uri("/api/v1/experience/notifications/read-all")
+                .uri(uri -> uri.path("/api/v1/experience/notifications/read-all").queryParam("partyId", PARTY_ID).build())
                 .exchange()
                 .expectStatus().isNoContent();
 
@@ -147,7 +143,9 @@ class NotificationCenterControllerTest {
         when(notificationCenterService.deleteNotification(PARTY_ID, NOTIFICATION_ID)).thenReturn(Mono.empty());
 
         webTestClient.delete()
-                .uri("/api/v1/experience/notifications/{id}", NOTIFICATION_ID)
+                .uri(uri -> uri.path("/api/v1/experience/notifications/{id}")
+                        .queryParam("partyId", PARTY_ID)
+                        .build(NOTIFICATION_ID))
                 .exchange()
                 .expectStatus().isNoContent();
 
@@ -162,54 +160,11 @@ class NotificationCenterControllerTest {
                 .thenReturn(Mono.just(new UnreadCountDTO(5L)));
 
         webTestClient.get()
-                .uri("/api/v1/experience/notifications/unread-count")
+                .uri(uri -> uri.path("/api/v1/experience/notifications/unread-count").queryParam("partyId", PARTY_ID).build())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UnreadCountDTO.class)
                 .value(dto -> org.assertj.core.api.Assertions.assertThat(dto.getCount()).isEqualTo(5L));
-    }
-
-    // --- GET /api/v1/experience/notifications/preferences ---
-
-    @Test
-    void getPreferences_returns200() {
-        var prefs = NotificationPreferencesDTO.builder()
-                .email(true).sms(true).push(false).inApp(true).marketingConsent(false).build();
-        when(notificationCenterService.getPreferences(PARTY_ID)).thenReturn(Mono.just(prefs));
-
-        webTestClient.get()
-                .uri("/api/v1/experience/notifications/preferences")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(NotificationPreferencesDTO.class)
-                .value(dto -> {
-                    org.assertj.core.api.Assertions.assertThat(dto.isEmail()).isTrue();
-                    org.assertj.core.api.Assertions.assertThat(dto.isPush()).isFalse();
-                });
-    }
-
-    // --- PUT /api/v1/experience/notifications/preferences ---
-
-    @Test
-    void updatePreferences_returns200WithUpdatedPrefs() {
-        var command = UpdatePreferencesCommand.builder().sms(false).marketingConsent(true).build();
-        var updated = NotificationPreferencesDTO.builder()
-                .email(true).sms(false).push(true).inApp(true).marketingConsent(true).build();
-
-        when(notificationCenterService.updatePreferences(eq(PARTY_ID), any(UpdatePreferencesCommand.class)))
-                .thenReturn(Mono.just(updated));
-
-        webTestClient.put()
-                .uri("/api/v1/experience/notifications/preferences")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(command)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(NotificationPreferencesDTO.class)
-                .value(dto -> {
-                    org.assertj.core.api.Assertions.assertThat(dto.isSms()).isFalse();
-                    org.assertj.core.api.Assertions.assertThat(dto.isMarketingConsent()).isTrue();
-                });
     }
 
     // --- helpers ---

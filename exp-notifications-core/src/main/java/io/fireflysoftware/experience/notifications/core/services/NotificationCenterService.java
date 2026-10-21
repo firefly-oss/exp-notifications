@@ -17,10 +17,8 @@
 
 package io.fireflysoftware.experience.notifications.core.services;
 
-import io.fireflysoftware.experience.notifications.core.commands.UpdatePreferencesCommand;
 import io.fireflysoftware.experience.notifications.core.queries.NotificationDTO;
 import io.fireflysoftware.experience.notifications.core.queries.NotificationDetailDTO;
-import io.fireflysoftware.experience.notifications.core.queries.NotificationPreferencesDTO;
 import io.fireflysoftware.experience.notifications.core.queries.UnreadCountDTO;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -29,7 +27,7 @@ import java.util.UUID;
 
 /**
  * Service contract for the notification centre experience layer.
- * Provides read and write operations over a party's notifications and preferences.
+ * Provides read and write operations over a party's sent notifications.
  */
 public interface NotificationCenterService {
 
@@ -82,22 +80,4 @@ public interface NotificationCenterService {
      * @return a {@link Mono} emitting an {@link UnreadCountDTO}
      */
     Mono<UnreadCountDTO> getUnreadCount(UUID partyId);
-
-    /**
-     * Returns the current notification channel preferences for the given party.
-     *
-     * @param partyId the party whose preferences are retrieved
-     * @return a {@link Mono} emitting a {@link NotificationPreferencesDTO}
-     */
-    Mono<NotificationPreferencesDTO> getPreferences(UUID partyId);
-
-    /**
-     * Applies the supplied preference changes for the given party and returns
-     * the resulting preference state.
-     *
-     * @param partyId the party whose preferences are updated
-     * @param command the set of preference changes to apply (null fields are ignored)
-     * @return a {@link Mono} emitting the updated {@link NotificationPreferencesDTO}
-     */
-    Mono<NotificationPreferencesDTO> updatePreferences(UUID partyId, UpdatePreferencesCommand command);
 }
